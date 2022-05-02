@@ -1,0 +1,66 @@
+!Switch
+[mu_s]: !ConstantMap
+  map:
+    mu_s: 0.6
+[d_c]: !ConstantMap
+  map:
+    d_c: 1.0
+[mu_d]: !Any
+  components:
+    - !GroupFilter
+      groups: 3
+      components: !LayeredModel
+        map: !AffineMap
+          matrix:
+            z1: [0.0, 0.0, 1.0]
+          translation:
+            z1: 0
+        interpolation: linear
+        parameters: [mu_d]
+        nodes:
+          15000:    [1.2]
+          -8000.0:  [1.2]
+          -15000.0:  [0.21]
+          -40000.0:  [0.21]
+          -40000.1:  [0.6]
+          -50000.0:  [0.6]
+          -50000.1:  [1.2]
+          -10e10:   [1.2]
+    - !GroupFilter
+      groups: 67
+      components: !LayeredModel
+        map: !AffineMap
+          matrix:
+            z1: [0.0, 0.0, 1.0]
+          translation:
+            z1: 0        
+        interpolation: linear
+        parameters: [mu_d]
+        nodes:
+          15000:    [1.2]
+          -8000.0:  [1.2]
+          -15000.0:  [0.21]
+          -40000.0:  [0.21]
+          -40000.1:  [0.6]
+          -50000.0:  [0.6]
+          -50000.1:  [1.2]
+          -10e10:   [1.2]
+[cohesion, forced_rupture_time]: !FunctionMap
+  map:
+    #r_crit0 =9500.0;
+    cohesion: |
+      cohesion = 00.0;
+      zIncreasingCohesion = 15000.0;
+      if (z >= -zIncreasingCohesion) {
+        return cohesion - 1.0*pow(10.,6.) * (z+zIncreasingCohesion)/zIncreasingCohesion;
+      }
+      return cohesion;
+    forced_rupture_time: |
+      r = sqrt(pow(x-475811.0875, 2.0) + pow(y-13876673.89, 2.0) + pow(z+34947.47, 2.0));
+      r_crit = 20000.0;
+      Vs = 3800.0;
+      if (r <= r_crit) {
+        return r/(0.7*Vs)+(0.081.0*r_crit/(0.7.0*Vs))*(1.0/(1.0-pow(r/r_crit, 2.0))-1.0);
+      }
+      return 1000000000.0;
+[s_xx, s_yy, s_zz, s_xy, s_yz, s_xz]: !Include 120_changed_initial_stress.yaml

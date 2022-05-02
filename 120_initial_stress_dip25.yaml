@@ -1,0 +1,44 @@
+!EvalModel
+parameters: [s_zz, b_xx, b_yy, b_xy, b_yz, b_xz, Pf, Omega]
+model: !Switch
+  [s_zz]: !Include lithostaticStress_gamma4.yaml
+  [b_xx, b_yy, b_zz, b_xy, b_yz, b_xz]: !EvalModel
+    parameters: [strike]
+    model: !AffineMap
+      matrix:
+        yx: [-1.0, 1.0, 0.0]
+      translation:
+        yx: 0
+      components:
+        - !ConstantMap
+          map:
+            strike: 280
+    components: !STRESS_STR_DIP_SLIP_AM
+      constants:
+        mu_d:     0.3
+        mu_s:     0.6
+        dip:      25
+        s_zz:     555562000
+        cohesion: 0.1
+        R:        0.7
+        DipSlipFaulting:  1.0
+        s2ratio:  0.4
+  [Pf, Omega]: !FunctionMap
+    map:
+      Pf: |
+              return -2670.0 * 0.97 * 9.8 * z;
+      Omega: |
+        if (z < -50000.0) {
+          Rz = (-z-50000.0) / 150000.0;
+          return max(0.0, min(1.0, 1.0-Rz));
+        }
+        return 1.0;
+components: !FunctionMap
+  map:
+    s_zz:     return Pf + s_zz;
+    s_xx:     return Pf + Omega*(b_xx*(s_zz+Pf)-Pf)+(1.0-Omega)*s_zz;
+    s_yy:     return Pf + Omega*(b_yy*(s_zz+Pf)-Pf)+(1.0-Omega)*s_zz;
+    s_xy:     return Omega*(b_xy*(s_zz+Pf));
+    s_yz:     return Omega*(b_yz*(s_zz+Pf));
+    s_xz:     return Omega*(b_xz*(s_zz+Pf));
+    plastCo:  return 0.001*(Pf + s_zz);

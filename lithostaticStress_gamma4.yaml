@@ -1,0 +1,10 @@
+!Switch
+[gamma]: !ConstantMap
+    map:
+       gamma: 0.974
+[lithostaticStress]: !FunctionMap
+    map:
+      lithostaticStress: return 0.97*2670.0*9.8*min(-10.0, z);
+[s_zz]: !FunctionMap
+    map:
+      s_zz: return 0.97*2670.0*9.8*min(-10.0, z);

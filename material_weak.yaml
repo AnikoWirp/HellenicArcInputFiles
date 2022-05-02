@@ -1,0 +1,25 @@
+!Switch
+[bulkFriction, plastCo]: !EvalModel
+    parameters: [lithostaticStress, gamma,z]
+    model: !Switch
+      [lithostaticStress, gamma]: !Include lithostaticStress_gamma4.yaml
+      [z]: !AffineMap
+          matrix:
+            z: [0.0, 0.0, 1.0]
+          translation:
+            z: 0
+    components: !FunctionMap
+      map:
+        bulkFriction: |
+          alpha = max(0.0, min(1.0, -z/18000.0));
+          return 0.2*(1-alpha)+0.6*alpha;
+        plastCo: |
+          c0=0.3*pow(10,6);
+          sig = abs(lithostaticStress*(1.0-gamma));
+          if (z>-18000) {
+             return c0 + pow(z/18000,2)*sig;
+          } else {
+             return c0 + sig;
+          }
+[rho, mu, lambda]: !Include rhomulambda_adapted2.yaml
+[s_xx, s_yy, s_zz, s_xy, s_yz, s_xz]: !Include 120_changed_initial_stress.yaml

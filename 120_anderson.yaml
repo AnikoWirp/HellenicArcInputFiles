@@ -1,0 +1,47 @@
+!EvalModel
+parameters: [Omega, sig_zz, b_xx, b_yy, b_zz, b_xy, b_yz, b_xz]
+model: !Switch
+  #This does not effect the calculations
+  [Omega]: !FunctionMap
+    map:
+      Omega: |
+       zStressDecreaseStart = -15000.;
+       zStressDecreaseStop = -60000.;
+       zStressDecreaseWidth = zStressDecreaseStart - zStressDecreaseStop;
+       if  (z>=zStressDecreaseStart) {
+          return 1.0;
+       } else {
+          if (z>=zStressDecreaseStop) {
+             a = 1.0-(z-zStressDecreaseStop)/zStressDecreaseWidth;
+             Sx = (3.0*a*a-2.0*a*a*a);
+             return 1.0-Sx;
+          } else {
+            return 0.001;
+          }
+       }
+  [b_xx, b_yy, b_zz, b_xy, b_yz, b_xz]: !EvalModel
+    parameters: [sig_zz]
+    model: !Switch
+      [sig_zz]:  &sig_zz !FunctionMap
+         map:
+           sig_zz: |
+              return max(-45000000, 2670.0*0.97*9.8*min(-10.0,z));
+    components: !AndersonianStress
+      constants:
+        mu_d:      0.1
+        mu_s:      0.6
+        SH_max:    285.0
+        cohesion:  0.0
+        s2ratio:   1.0
+        S_v: 3
+        S: 0.4
+  [sig_zz]: *sig_zz
+components: !FunctionMap
+  map:
+    s_xx:     return Omega*b_xx + (1.0-Omega)*sig_zz;
+    s_yy:     return Omega*b_yy + (1.0-Omega)*sig_zz;
+    s_zz:     return Omega*b_zz + (1.0-Omega)*sig_zz;
+    s_xy:     return Omega*b_xy;
+    s_yz:     return Omega*b_yz;
+    s_xz:     return Omega*b_xz;
+

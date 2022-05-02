@@ -1,0 +1,13 @@
+!Switch
+[bulkFriction]: !ConstantMap
+  map:
+    bulkFriction: 0.6
+[plastCo]: !EvalModel
+    parameters: [lithostaticStress, gamma]
+    model: !Switch
+      [lithostaticStress, gamma]: !Include lithostaticStress_gamma4.yaml
+    components: !FunctionMap
+      map:
+              plastCo:  return 1*pow(10,6) + 1.00*abs(lithostaticStress*(1.0-gamma));
+[rho, mu, lambda]: !Include rhomulambda_adapted2.yaml
+[s_xx, s_yy, s_zz, s_xy, s_yz, s_xz]: !Include 120_changed_initial_stress.yaml
